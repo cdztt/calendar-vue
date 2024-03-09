@@ -50,7 +50,7 @@ export default class Calendar {
     return true;
   }
 
-  /* 一年的第一天在日历框（共6行，每行7天，共42天，索引从0开始）里的索引 */
+  /* 一年的第一天在日历框（日历框共6行，每行7天，共42天，索引从0开始）里的索引 */
   getFirstDayIndexOfYear(year) {
     const BASE_YEAR = {
       year: 1970,

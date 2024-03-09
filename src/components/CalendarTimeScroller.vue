@@ -1,56 +1,65 @@
 <script setup>
-import { inject, ref } from 'vue';
+import { computed, ref } from 'vue';
 import NumberScroller from './NumberScroller.vue';
 
-const props = defineProps(['currentHours', 'currentMinutes'])
-const emit = defineEmits(['update:currentHours', 'update:currentMinutes'])
-
-const { timeVisible, setTimeVisible } = inject('calendar-time-visible')
+const props = defineProps(['currentHours', 'currentMinutes', 'timeVisible']);
+const emit = defineEmits([
+  'update:currentHours',
+  'update:currentMinutes',
+  'update:timeVisible',
+]);
 
 const hoursProps = {
   min: 0,
   max: 23,
-}
+};
 const minutesProps = {
   min: 0,
   max: 59,
-  prefixZero: true
-}
-const currentHours = ref(props.currentHours)
-const currentMinutes = ref(props.currentMinutes)
+  prefixZero: true,
+};
+
+const currentHours = ref(props.currentHours);
+const currentMinutes = ref(props.currentMinutes);
+
+const displayedTime = computed(
+  () =>
+    `${props.currentHours} : ${props.currentMinutes < 10 ? '0' + props.currentMinutes : props.currentMinutes}`
+);
 
 const handleConfirm = () => {
-  emit('update:currentHours', currentHours.value)
-  emit('update:currentMinutes', currentMinutes.value)
-  setTimeVisible(false)
-}
+  emit('update:currentHours', currentHours.value);
+  emit('update:currentMinutes', currentMinutes.value);
+  emit('update:timeVisible', false);
+};
+
 const handleCancel = () => {
-  setTimeVisible(false)
-}
-  ;
+  emit('update:timeVisible', false);
+};
 </script>
+
 <template>
   <div @click="(e) => e.stopPropagation()" class="calendartime">
-    <div v-show="timeVisible" class="calendartime-input theme-background-color">
+    <div v-show="timeVisible" class="calendartime-input">
       <div class="calendartime-input-scroller">
         <NumberScroller v-bind="hoursProps" v-model:current="currentHours" />
-        <NumberScroller v-bind="minutesProps" v-model:current="currentMinutes" />
+        <NumberScroller
+          v-bind="minutesProps"
+          v-model:current="currentMinutes"
+        />
       </div>
       <div class="calendartime-input-button">
-        <span @click="handleConfirm">
-          ✔
-        </span>
-        <span @click="handleCancel">
-          ✖
-        </span>
+        <span @click="handleConfirm"> ✔ </span>
+        <span @click="handleCancel"> ✖ </span>
       </div>
     </div>
 
-    <div @click="setTimeVisible(true)" class="calendartime-text">
-      {{ `${props.currentHours} : ${props.currentMinutes < 10 ? '0' + props.currentMinutes : props.currentMinutes}` }}
-        </div>
+    <div @click="emit('update:timeVisible', true)" class="calendartime-text">
+      {{ displayedTime }}
     </div>
+  </div>
 </template>
+
 <style scoped lang="less">
 .calendartime {
   text-align: center;

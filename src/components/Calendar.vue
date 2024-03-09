@@ -1,5 +1,13 @@
 <script setup>
-import { computed, inject, nextTick, reactive, ref, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue';
 import CalendarClass from '../utils/Calendar.js';
 import CalendarDatePicker from './CalendarDatePicker.vue';
 import CalendarTimeScroller from './CalendarTimeScroller.vue';
@@ -7,20 +15,31 @@ import CalendarTimeScroller from './CalendarTimeScroller.vue';
 const props = defineProps({
   placement: {
     type: String,
-    default: 'topleft'
-  }
-})
-const emit = defineEmits(['onSave'])
+    default: 'topleft',
+  },
+});
+const emit = defineEmits(['onSave']);
 
-const { dayVisible, setDayVisible } = inject('calendar-day-visible')
-const { year, month, date, dayZh, hours } = CalendarClass.getNowDate()
+const dayVisible = ref(false);
+const timeVisible = ref(false);
+// const [dayVisible, dayVisible.value] = useState(false);
+// const [timeVisible, setTimeVisible] = useState(false);
+const selfRef = ref();
 
-const selectedYear = ref(year)
-const selectedMonth = ref(month)
-const selectedDate = ref(date)
-const selectedDay = ref(dayZh)
-const currentHours = ref(hours + 2)
-const currentMinutes = ref(0)
+// provide('calendar-time-visible', {
+//   timeVisible,
+//   setTimeVisible,
+// });
+
+// const { dayVisible, dayVisible.value } = inject('calendar-day-visible')
+const { year, month, date, dayZh, hours } = CalendarClass.getNowDate();
+
+const selectedYear = ref(year);
+const selectedMonth = ref(month);
+const selectedDate = ref(date);
+const selectedDay = ref(dayZh);
+const currentHours = ref(hours + 2);
+const currentMinutes = ref(0);
 
 const updatedCalendar = computed(() => ({
   year: selectedYear.value,
@@ -28,81 +47,130 @@ const updatedCalendar = computed(() => ({
   date: selectedDate.value,
   day: selectedDay.value,
   hours: currentHours.value,
-  minutes: currentMinutes.value
-}))
+  minutes: currentMinutes.value,
+}));
 
-const contentRef = ref()
-const calendarRef = ref()
-const selfRef = inject('calendar-self')
+const contentRef = ref();
+const calendarRef = ref();
+// const selfRef = inject('calendar-self')
 
 const offset = reactive({
   top: 0,
-  left: 0
-})
+  left: 0,
+});
+
+const handleClickOtherwhere = (e) => {
+  if (!selfRef.value.contains(e.target)) {
+    if (timeVisible.value) {
+      timeVisible.value = false;
+    } else if (dayVisible.value) {
+      dayVisible.value = false;
+    }
+  }
+};
+
+onMounted(() => {
+  /* 点击其他地方，取消显示 */
+  document.body.addEventListener('click', handleClickOtherwhere);
+});
+
+onBeforeUnmount(() => {
+  document.body.removeEventListener('click', handleClickOtherwhere);
+});
 
 /* 监听dayVisible，设置偏移量 */
 watch([dayVisible, () => props.placement], async () => {
-  await nextTick()//等待dom渲染完之后，后面要重新获取v-show之后的dom尺寸
+  await nextTick(); //等待dom渲染完之后，后面要重新获取v-show之后的dom尺寸
 
   switch (props.placement) {
     case 'topleft':
-      offset.top = -calendarRef.value.offsetHeight
-      offset.left = -calendarRef.value.offsetWidth
-      break
+      offset.top = -calendarRef.value.offsetHeight;
+      offset.left = -calendarRef.value.offsetWidth;
+      break;
     case 'top':
-      offset.top = -calendarRef.value.offsetHeight
-      offset.left = -((calendarRef.value.offsetWidth - contentRef.value.offsetWidth) / 2)
-      break
+      offset.top = -calendarRef.value.offsetHeight;
+      offset.left = -(
+        (calendarRef.value.offsetWidth - contentRef.value.offsetWidth) /
+        2
+      );
+      break;
     case 'topright':
-      offset.top = -calendarRef.value.offsetHeight
-      offset.left = contentRef.value.offsetWidth
-      break
+      offset.top = -calendarRef.value.offsetHeight;
+      offset.left = contentRef.value.offsetWidth;
+      break;
     case 'right':
-      offset.top = -((calendarRef.value.offsetHeight - contentRef.value.offsetHeight) / 2)
-      offset.left = contentRef.value.offsetWidth
-      break
+      offset.top = -(
+        (calendarRef.value.offsetHeight - contentRef.value.offsetHeight) /
+        2
+      );
+      offset.left = contentRef.value.offsetWidth;
+      break;
     case 'bottomright':
-      offset.top = contentRef.value.offsetHeight
-      offset.left = contentRef.value.offsetWidth
-      break
+      offset.top = contentRef.value.offsetHeight;
+      offset.left = contentRef.value.offsetWidth;
+      break;
     case 'bottom':
-      offset.top = contentRef.value.offsetHeight
-      offset.left = -((calendarRef.value.offsetWidth - contentRef.value.offsetWidth) / 2)
-      break
+      offset.top = contentRef.value.offsetHeight;
+      offset.left = -(
+        (calendarRef.value.offsetWidth - contentRef.value.offsetWidth) /
+        2
+      );
+      break;
     case 'bottomleft':
-      offset.top = contentRef.value.offsetHeight
-      offset.left = -calendarRef.value.offsetWidth
-      break
+      offset.top = contentRef.value.offsetHeight;
+      offset.left = -calendarRef.value.offsetWidth;
+      break;
     case 'left':
-      offset.top = -((calendarRef.value.offsetHeight - contentRef.value.offsetHeight) / 2)
-      offset.left = -calendarRef.value.offsetWidth
-      break
+      offset.top = -(
+        (calendarRef.value.offsetHeight - contentRef.value.offsetHeight) /
+        2
+      );
+      offset.left = -calendarRef.value.offsetWidth;
+      break;
   }
-})
+});
 
 const handleSave = () => {
-  emit('onSave', updatedCalendar.value)
-  setDayVisible(false)
-}
-  ;
+  emit('onSave', updatedCalendar.value);
+  dayVisible.value = false;
+};
 </script>
 <template>
-  <div class="calendar" @wheel="e => e.preventDefault()" ref="selfRef">
-    <div ref="contentRef" @click="setDayVisible(true)">
+  <div class="calendar" @wheel="(e) => e.preventDefault()" ref="selfRef">
+    <div ref="contentRef" @click="dayVisible = true">
       <slot></slot>
     </div>
 
-    <div v-show="dayVisible" class="calendar-main theme-background-color" ref="calendarRef"
-      :style="{ top: `${offset.top}px`, left: `${offset.left}px` }">
-      <CalendarDatePicker @update:selectedYear="e => selectedYear = e" @update:selectedMonth="e => selectedMonth = e"
-        @update:selectedDate="e => selectedDate = e" @update:selectedDay="e => selectedDay = e" />
-      <CalendarTimeScroller v-model:currentHours="currentHours" v-model:currentMinutes="currentMinutes" />
+    <div
+      v-show="dayVisible"
+      class="calendar-main"
+      ref="calendarRef"
+      :style="{
+        top: `${offset.top}px`,
+        left: `${offset.left}px`,
+      }"
+    >
+      <CalendarDatePicker
+        @update:selectedYear="(e) => (selectedYear = e)"
+        @update:selectedMonth="(e) => (selectedMonth = e)"
+        @update:selectedDate="(e) => (selectedDate = e)"
+        @update:selectedDay="(e) => (selectedDay = e)"
+      />
+      <CalendarTimeScroller
+        v-model:currentHours="currentHours"
+        v-model:currentMinutes="currentMinutes"
+        :timeVisible="timeVisible"
+        @update:timeVisible="(e) => (timeVisible = e)"
+      />
 
       <div class="calendar-main-button">
-        <span class="calendar-main-button-item calendar-main-button-save" @click="handleSave">
+        <span
+          class="calendar-main-button-item calendar-main-button-save"
+          @click="handleSave"
+        >
           保存
         </span>
-        <span class="calendar-main-button-item" @click="setDayVisible(false)">
+        <span class="calendar-main-button-item" @click="dayVisible = false">
           取消
         </span>
       </div>
