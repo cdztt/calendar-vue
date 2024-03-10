@@ -1,9 +1,14 @@
+<script>
+const COLORS = ['#3b3b3b', 'brown', 'green', 'blue', 'orange'];
+</script>
+
 <script setup>
 import {
   computed,
   nextTick,
   onBeforeUnmount,
   onMounted,
+  provide,
   reactive,
   ref,
   watch,
@@ -15,32 +20,40 @@ import CalendarTimeScroller from './CalendarTimeScroller.vue';
 const props = defineProps({
   placement: {
     type: String,
-    default: 'topleft',
+    default: 'left',
+  },
+  color: {
+    type: String,
+    default: COLORS[0],
   },
 });
+
+/* 对外暴露的接口 */
 const emit = defineEmits(['onSave']);
+
+const { year, month, date, dayZh, hours, minutes } = CalendarClass.getNowDate();
 
 const dayVisible = ref(false);
 const timeVisible = ref(false);
-// const [dayVisible, dayVisible.value] = useState(false);
-// const [timeVisible, setTimeVisible] = useState(false);
-const selfRef = ref();
-
-// provide('calendar-time-visible', {
-//   timeVisible,
-//   setTimeVisible,
-// });
-
-// const { dayVisible, dayVisible.value } = inject('calendar-day-visible')
-const { year, month, date, dayZh, hours } = CalendarClass.getNowDate();
-
 const selectedYear = ref(year);
 const selectedMonth = ref(month);
 const selectedDate = ref(date);
 const selectedDay = ref(dayZh);
-const currentHours = ref(hours + 2);
-const currentMinutes = ref(0);
+const currentHours = ref(hours);
+const currentMinutes = ref(minutes);
+const offset = reactive({
+  top: 0,
+  left: 0,
+});
+const selfRef = ref();
+const contentRef = ref();
+const calendarRef = ref();
 
+const color = computed(() =>
+  COLORS.includes(props.color) ? props.color : COLORS[0]
+);
+
+/* 发射到外面的数据 */
 const updatedCalendar = computed(() => ({
   year: selectedYear.value,
   month: selectedMonth.value,
@@ -50,24 +63,8 @@ const updatedCalendar = computed(() => ({
   minutes: currentMinutes.value,
 }));
 
-const contentRef = ref();
-const calendarRef = ref();
-// const selfRef = inject('calendar-self')
-
-const offset = reactive({
-  top: 0,
-  left: 0,
-});
-
-const handleClickOtherwhere = (e) => {
-  if (!selfRef.value.contains(e.target)) {
-    if (timeVisible.value) {
-      timeVisible.value = false;
-    } else if (dayVisible.value) {
-      dayVisible.value = false;
-    }
-  }
-};
+/* 主题颜色注入到下面的组件 */
+provide('color', color);
 
 onMounted(() => {
   /* 点击其他地方，取消显示 */
@@ -80,61 +77,72 @@ onBeforeUnmount(() => {
 
 /* 监听dayVisible，设置偏移量 */
 watch([dayVisible, () => props.placement], async () => {
-  await nextTick(); //等待dom渲染完之后，后面要重新获取v-show之后的dom尺寸
+  //等待dom渲染完之后，后面要重新获取v-show之后的dom尺寸
+  await nextTick();
+  const {
+    top: contentTop,
+    left: contentLeft,
+    bottom: contentBottom,
+    right: contentRight,
+  } = contentRef.value.getBoundingClientRect();
+  const viewHeight = window.innerHeight;
+  const viewWidth = window.innerWidth;
 
   switch (props.placement) {
-    case 'topleft':
-      offset.top = -calendarRef.value.offsetHeight;
-      offset.left = -calendarRef.value.offsetWidth;
-      break;
     case 'top':
-      offset.top = -calendarRef.value.offsetHeight;
+      offset.top = Math.max(-calendarRef.value.offsetHeight, -contentTop);
       offset.left = -(
         (calendarRef.value.offsetWidth - contentRef.value.offsetWidth) /
         2
       );
-      break;
-    case 'topright':
-      offset.top = -calendarRef.value.offsetHeight;
-      offset.left = contentRef.value.offsetWidth;
       break;
     case 'right':
       offset.top = -(
         (calendarRef.value.offsetHeight - contentRef.value.offsetHeight) /
         2
       );
-      offset.left = contentRef.value.offsetWidth;
-      break;
-    case 'bottomright':
-      offset.top = contentRef.value.offsetHeight;
-      offset.left = contentRef.value.offsetWidth;
+      offset.left =
+        contentRef.value.offsetWidth -
+        Math.max(contentRight + calendarRef.value.offsetWidth - viewWidth, 0);
       break;
     case 'bottom':
-      offset.top = contentRef.value.offsetHeight;
+      offset.top =
+        contentRef.value.offsetHeight -
+        Math.max(
+          contentBottom + calendarRef.value.offsetHeight - viewHeight,
+          0
+        );
       offset.left = -(
         (calendarRef.value.offsetWidth - contentRef.value.offsetWidth) /
         2
       );
-      break;
-    case 'bottomleft':
-      offset.top = contentRef.value.offsetHeight;
-      offset.left = -calendarRef.value.offsetWidth;
       break;
     case 'left':
       offset.top = -(
         (calendarRef.value.offsetHeight - contentRef.value.offsetHeight) /
         2
       );
-      offset.left = -calendarRef.value.offsetWidth;
+      offset.left = Math.max(-calendarRef.value.offsetWidth, -contentLeft);
       break;
   }
 });
+
+const handleClickOtherwhere = (e) => {
+  if (!selfRef.value.contains(e.target)) {
+    if (timeVisible.value) {
+      timeVisible.value = false;
+    } else if (dayVisible.value) {
+      dayVisible.value = false;
+    }
+  }
+};
 
 const handleSave = () => {
   emit('onSave', updatedCalendar.value);
   dayVisible.value = false;
 };
 </script>
+
 <template>
   <div class="calendar" @wheel="(e) => e.preventDefault()" ref="selfRef">
     <div ref="contentRef" @click="dayVisible = true">
@@ -156,6 +164,7 @@ const handleSave = () => {
         @update:selectedDate="(e) => (selectedDate = e)"
         @update:selectedDay="(e) => (selectedDay = e)"
       />
+
       <CalendarTimeScroller
         v-model:currentHours="currentHours"
         v-model:currentMinutes="currentMinutes"
@@ -177,6 +186,7 @@ const handleSave = () => {
     </div>
   </div>
 </template>
+
 <style scoped lang="less">
 .calendar {
   position: relative;
@@ -190,6 +200,7 @@ const handleSave = () => {
     padding: 0.5rem 0.5rem;
     position: absolute;
     z-index: 1;
+    background-color: white;
 
     &-button {
       display: grid;
@@ -205,10 +216,10 @@ const handleSave = () => {
       }
 
       &-save {
-        border-color: orange;
+        border-color: v-bind('color');
 
         &:hover {
-          color: orange;
+          color: v-bind('color');
         }
       }
     }

@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 
 const props = defineProps(['min', 'max', 'current', 'prefixZero']);
 const emit = defineEmits(['update:current']);
+const color = inject('color');
 
 const isScrollable = ref(false);
 
@@ -77,8 +78,8 @@ const showedNumber = (n) => {
   border: 1px solid gray;
 
   &-current {
-    border-top: 1px solid orange;
-    border-bottom: 1px solid orange;
+    border-top: 2px solid v-bind('color');
+    border-bottom: 2px solid v-bind('color');
   }
 }
 </style>

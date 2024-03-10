@@ -1,14 +1,17 @@
 <script setup>
-import { ref } from 'vue';
+import { inject, ref } from 'vue';
 import CalendarClass from '../utils/Calendar.js';
 
-const nowDate = CalendarClass.getNowDate();
 const emit = defineEmits([
   'update:selectedYear',
   'update:selectedMonth',
   'update:selectedDate',
   'update:selectedDay',
 ]);
+
+const color = inject('color');
+
+const nowDate = CalendarClass.getNowDate();
 
 const selectedIndex = ref();
 const calendar = ref(
@@ -17,6 +20,7 @@ const calendar = ref(
 
 const dayClass = (i, j) => {
   const index = i * 7 + j + 1;
+
   return {
     selected: index === selectedIndex.value,
     currentday:
@@ -41,6 +45,7 @@ const handleSelectDate = (i, j, date) => {
   } else {
     selectedMonth = calendar.value.month;
   }
+
   emit('update:selectedYear', calendar.value.year);
   emit('update:selectedMonth', selectedMonth);
   emit('update:selectedDate', date);
@@ -50,6 +55,7 @@ const handleSelectDate = (i, j, date) => {
 const handleDecreaseMonth = () => {
   calendar.value.decreaseMonth();
   selectedIndex.value = calendar.value.startDayIndexOfCurrentMonth;
+
   emit('update:selectedYear', calendar.value.year);
   emit('update:selectedMonth', calendar.value.month);
   emit('update:selectedDate', 1);
@@ -59,12 +65,14 @@ const handleDecreaseMonth = () => {
 const handleIncreaseMonth = () => {
   calendar.value.increaseMonth();
   selectedIndex.value = calendar.value.startDayIndexOfCurrentMonth;
+
   emit('update:selectedYear', calendar.value.year);
   emit('update:selectedMonth', calendar.value.month);
   emit('update:selectedDate', 1);
   emit('update:selectedDay', calendar.value.currentDayInWeek);
 };
 </script>
+
 <template>
   <div class="calendardate">
     <tr class="calendardate-month">
@@ -93,6 +101,7 @@ const handleIncreaseMonth = () => {
     </tr>
   </div>
 </template>
+
 <style scoped lang="less">
 .calendardate {
   &-month {
@@ -110,17 +119,13 @@ td {
 .selected {
   outline: 2px solid;
   outline-offset: -4px;
-  outline-color: #242424;
-
-  @media (prefers-color-scheme: light) {
-    outline-color: #ffffff;
-  }
-
-  background-color: orange;
+  outline-color: white;
+  color: white;
+  background-color: v-bind('color');
 }
 
 .currentday {
-  outline: 2px solid orange;
+  outline: 2px solid v-bind('color');
   outline-offset: -4px;
 }
 

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 import NumberScroller from './NumberScroller.vue';
 
 const props = defineProps(['currentHours', 'currentMinutes', 'timeVisible']);
@@ -8,6 +8,7 @@ const emit = defineEmits([
   'update:currentMinutes',
   'update:timeVisible',
 ]);
+const color = inject('color');
 
 const hoursProps = {
   min: 0,
@@ -76,7 +77,7 @@ const handleCancel = () => {
     }
 
     &-button {
-      color: orange;
+      color: v-bind('color');
       display: grid;
       grid-template-columns: 1fr 1fr;
       border: 1px solid gray;

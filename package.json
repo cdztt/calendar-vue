@@ -1,12 +1,23 @@
 {
   "name": "calendar-vue",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/calendar-vue.umd.cjs",
+  "module": "./dist/calendar-vue.js",
+  "exports": {
+    ".": {
+      "import": "./dist/calendar-vue.js",
+      "require": "./dist/calendar-vue.umd.cjs"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "npm:pub": "npm publish --access public"
   },
   "dependencies": {
     "vue": "^3.4.19"
