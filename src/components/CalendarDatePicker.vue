@@ -17,7 +17,7 @@ const emit = defineEmits([
 const color = inject('color');
 
 const calendar = ref();
-const selectedDay = shallowRef(null);
+const selectedDay = shallowRef();
 
 const weekNames = computed(() =>
   props.mode === 'mondayFirst'
