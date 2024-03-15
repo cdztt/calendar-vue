@@ -246,6 +246,7 @@ const showTimeScroller = () => {
 
 <style scoped lang="less">
 .calendar {
+  position: relative;
   cursor: default;
 
   &-main {
