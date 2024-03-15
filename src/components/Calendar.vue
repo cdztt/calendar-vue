@@ -26,6 +26,10 @@ const props = defineProps({
     type: String,
     default: COLORS[0],
   },
+  mode: {
+    type: String,
+    default: 'mondayFirst',
+  },
 });
 
 /* 对外暴露的接口 */
@@ -46,7 +50,6 @@ const offset = reactive({
   top: 0,
   left: 0,
 });
-const mode = ref('mondayFirst');
 
 watchEffect(() => {
   if (visible.value) {
@@ -74,6 +77,7 @@ const exposedData = computed(() => {
   const year = selectedYear.value;
   const month = selectedMonth.value;
   const date = selectedDate.value;
+
   return {
     exposed: {
       year,
@@ -208,7 +212,7 @@ const showTimeScroller = () => {
         v-model:selectedYear="selectedYear"
         v-model:selectedMonth="selectedMonth"
         v-model:selectedDate="selectedDate"
-        :mode="mode"
+        :mode="props.mode"
       />
 
       <CalendarTimeScroller

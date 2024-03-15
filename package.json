@@ -1,6 +1,6 @@
 {
   "name": "@cdztt/calendar-vue",
-  "version": "1.0.8",
+  "version": "1.0.11",
   "type": "module",
   "files": [
     "dist/index.js",
@@ -23,7 +23,6 @@
     "npm:pub": "npm publish --access public"
   },
   "dependencies": {
-    "@cdztt/calendar-vue": "^1.0.7",
     "vue": "^3.4.19"
   },
   "devDependencies": {
