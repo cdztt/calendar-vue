@@ -1,21 +1,25 @@
 <script setup>
 import { computed, inject, ref } from 'vue';
 
-const props = defineProps(['min', 'max', 'current', 'prefixZero']);
+const props = defineProps(['min', 'max', 'current']);
 const emit = defineEmits(['update:current']);
 const color = inject('color');
+
+const getTimeNumber = (num) => {
+  const range = props.max - props.min + 1;
+  return (num + range) % range;
+};
 
 const isScrollable = ref(false);
 
 const numbers = computed(() => {
-  const range = props.max - props.min + 1;
   const numbers = [];
 
   for (let i = -4; i <= 4; i++) {
     if ((i === -4 || i === 4) && isScrollable.value) {
       numbers.push(i === -4 ? '▲' : '▼');
     } else {
-      numbers.push((props.current + i + range) % range);
+      numbers.push(getTimeNumber(props.current + i));
     }
   }
 
@@ -26,15 +30,15 @@ const handleWheel = (e) => {
   let newNumber;
 
   if (e.deltaY < 0) {
-    newNumber = props.current === props.min ? props.max : props.current - 1;
+    newNumber = props.current - 1;
   } else {
-    newNumber = props.current === props.max ? props.min : props.current + 1;
+    newNumber = props.current + 1;
   }
 
-  emit('update:current', newNumber);
+  emit('update:current', getTimeNumber(newNumber));
 };
 
-const handleClickNumber = (n) => {
+const handleClick = (n) => {
   let newNumber;
 
   if (n === '▲') {
@@ -45,13 +49,7 @@ const handleClickNumber = (n) => {
     newNumber = n;
   }
 
-  emit('update:current', newNumber);
-};
-
-const showedNumber = (n) => {
-  if (!props.prefixZero) return n;
-  if (typeof n === 'number' && n >= 0 && n < 10) return '0' + n;
-  return n;
+  emit('update:current', getTimeNumber(newNumber));
 };
 </script>
 
@@ -60,15 +58,15 @@ const showedNumber = (n) => {
     <div
       v-for="n of numbers"
       :key="n"
-      @click="handleClickNumber(n)"
+      @click="handleClick(n)"
       @mouseover="isScrollable = true"
       @mouseout="isScrollable = false"
       :class="{
         'numberscroller-current': n === props.current,
+        'numberscroller-arrow': n === '▲' || n === '▼',
       }"
-      class="none-user-select"
     >
-      {{ showedNumber(n) }}
+      {{ n >= 0 && n < 10 ? '0' + n : n }}
     </div>
   </div>
 </template>
@@ -78,8 +76,11 @@ const showedNumber = (n) => {
   border: 1px solid gray;
 
   &-current {
-    border-top: 2px solid v-bind('color');
-    border-bottom: 2px solid v-bind('color');
+    border-top: 1px dotted v-bind('color');
+    border-bottom: 1px dotted v-bind('color');
+  }
+  &-arrow {
+    color: v-bind('color');
   }
 }
 </style>

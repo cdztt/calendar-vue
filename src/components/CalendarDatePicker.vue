@@ -1,75 +1,66 @@
 <script setup>
-import { inject, ref } from 'vue';
+import { computed, inject, ref, shallowRef, watchEffect } from 'vue';
 import CalendarClass from '../utils/Calendar.js';
 
+const props = defineProps([
+  'selectedYear',
+  'selectedMonth',
+  'selectedDate',
+  'mode',
+]);
 const emit = defineEmits([
   'update:selectedYear',
   'update:selectedMonth',
   'update:selectedDate',
-  'update:selectedDay',
 ]);
 
 const color = inject('color');
 
-const nowDate = CalendarClass.getNowDate();
+const calendar = ref();
+const selectedDay = shallowRef(null);
 
-const selectedIndex = ref();
-const calendar = ref(
-  new CalendarClass(nowDate.year, nowDate.month, nowDate.date)
+const weekNames = computed(() =>
+  props.mode === 'mondayFirst'
+    ? ['一', '二', '三', '四', '五', '六', '日']
+    : ['日', '一', '二', '三', '四', '五', '六']
 );
 
-const dayClass = (i, j) => {
-  const index = i * 7 + j + 1;
+/* 不响应年月日 */
+const { selectedYear, selectedMonth, selectedDate } = props;
 
+watchEffect(() => {
+  /* 响应mode */
+  calendar.value = new CalendarClass(selectedYear, selectedMonth, props.mode);
+});
+
+/* 每个日期的类 */
+const dayClass = (date, month, year) => {
   return {
-    selected: index === selectedIndex.value,
+    selected:
+      date === selectedDay.value?.date &&
+      month === selectedDay.value?.month &&
+      year === selectedDay.value?.year,
     currentday:
-      index === calendar.value.currentDayIndex &&
-      nowDate.month === calendar.value.month &&
-      nowDate.year === calendar.value.year,
+      date === selectedDate && month === selectedMonth && year === selectedYear,
     othermonth:
-      index < calendar.value.startDayIndexOfCurrentMonth ||
-      index > calendar.value.endDayIndexOfCurrentMonth,
+      year !== selectedYear ||
+      (year === selectedYear && month !== selectedMonth),
   };
 };
 
-const handleSelectDate = (i, j, date) => {
-  const index = i * 7 + j + 1;
-  selectedIndex.value = index;
-
-  let selectedMonth;
-  if (index < calendar.value.startDayIndexOfCurrentMonth) {
-    selectedMonth = calendar.value.getPreviousMonth();
-  } else if (index > calendar.value.endDayIndexOfCurrentMonth) {
-    selectedMonth = calendar.value.getNextMonth();
-  } else {
-    selectedMonth = calendar.value.month;
-  }
-
-  emit('update:selectedYear', calendar.value.year);
-  emit('update:selectedMonth', selectedMonth);
+const handleSelectDay = (date, month, year) => {
+  emit('update:selectedYear', year);
+  emit('update:selectedMonth', month);
   emit('update:selectedDate', date);
-  emit('update:selectedDay', calendar.value.currentDayInWeek);
+  selectedDay.value = { date, month, year };
 };
 
 const handleDecreaseMonth = () => {
   calendar.value.decreaseMonth();
-  selectedIndex.value = calendar.value.startDayIndexOfCurrentMonth;
-
-  emit('update:selectedYear', calendar.value.year);
-  emit('update:selectedMonth', calendar.value.month);
-  emit('update:selectedDate', 1);
-  emit('update:selectedDay', calendar.value.currentDayInWeek);
 };
 
 const handleIncreaseMonth = () => {
   calendar.value.increaseMonth();
-  selectedIndex.value = calendar.value.startDayIndexOfCurrentMonth;
-
-  emit('update:selectedYear', calendar.value.year);
-  emit('update:selectedMonth', calendar.value.month);
-  emit('update:selectedDate', 1);
-  emit('update:selectedDay', calendar.value.currentDayInWeek);
 };
 </script>
 
@@ -79,22 +70,22 @@ const handleIncreaseMonth = () => {
       <td colspan="5" class="calendardate-month-text">
         {{ `${calendar.year}年${calendar.month}月` }}
       </td>
-      <td @click="handleDecreaseMonth">▲</td>
-      <td @click="handleIncreaseMonth">▼</td>
+      <td @click="handleDecreaseMonth" class="calendardate-month-arrow">▲</td>
+      <td @click="handleIncreaseMonth" class="calendardate-month-arrow">▼</td>
     </tr>
 
     <tr>
-      <td v-for="day of Object.values(CalendarClass.dayMapping)" :key="day">
+      <td v-for="day of weekNames" :key="day">
         {{ day }}
       </td>
     </tr>
 
     <tr v-for="(week, i) of calendar.daysInWeekOfMonth" :key="i">
       <td
-        v-for="(date, j) of week"
+        v-for="({ date, month, year }, j) of week"
         :key="j"
-        :class="dayClass(i, j)"
-        @click="handleSelectDate(i, j, date)"
+        :class="dayClass(date, month, year)"
+        @click="handleSelectDay(date, month, year)"
       >
         {{ date }}
       </td>
@@ -104,9 +95,13 @@ const handleIncreaseMonth = () => {
 
 <style scoped lang="less">
 .calendardate {
+  height: 250px;
   &-month {
     &-text {
       text-align: left;
+    }
+    &-arrow {
+      color: v-bind('color');
     }
   }
 }

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, inject, ref } from 'vue';
+import CalendarClass from '../utils/Calendar.js';
 import NumberScroller from './NumberScroller.vue';
 
 const props = defineProps(['currentHours', 'currentMinutes', 'timeVisible']);
@@ -8,7 +8,6 @@ const emit = defineEmits([
   'update:currentMinutes',
   'update:timeVisible',
 ]);
-const color = inject('color');
 
 const hoursProps = {
   min: 0,
@@ -17,81 +16,83 @@ const hoursProps = {
 const minutesProps = {
   min: 0,
   max: 59,
-  prefixZero: true,
 };
 
-const currentHours = ref(props.currentHours);
-const currentMinutes = ref(props.currentMinutes);
-
-const displayedTime = computed(
-  () =>
-    `${props.currentHours} : ${props.currentMinutes < 10 ? '0' + props.currentMinutes : props.currentMinutes}`
-);
+const initHours = props.currentHours;
+const initMinutes = props.currentMinutes;
 
 const handleConfirm = () => {
-  emit('update:currentHours', currentHours.value);
-  emit('update:currentMinutes', currentMinutes.value);
   emit('update:timeVisible', false);
 };
 
 const handleCancel = () => {
+  emit('update:currentHours', initHours);
+  emit('update:currentMinutes', initMinutes);
   emit('update:timeVisible', false);
+};
+
+const handleCurrentTime = () => {
+  const { hours, minutes } = CalendarClass.getNowDate();
+  emit('update:currentHours', hours);
+  emit('update:currentMinutes', minutes);
 };
 </script>
 
 <template>
   <div @click="(e) => e.stopPropagation()" class="calendartime">
-    <div v-show="timeVisible" class="calendartime-input">
-      <div class="calendartime-input-scroller">
-        <NumberScroller v-bind="hoursProps" v-model:current="currentHours" />
-        <NumberScroller
-          v-bind="minutesProps"
-          v-model:current="currentMinutes"
-        />
-      </div>
-      <div class="calendartime-input-button">
-        <span @click="handleConfirm"> ✔ </span>
-        <span @click="handleCancel"> ✖ </span>
-      </div>
+    <div class="calendartime-scroller">
+      <NumberScroller
+        v-bind="hoursProps"
+        :current="props.currentHours"
+        @update:current="(e) => emit('update:currentHours', e)"
+      />
+      <NumberScroller
+        v-bind="minutesProps"
+        :current="props.currentMinutes"
+        @update:current="(e) => emit('update:currentMinutes', e)"
+      />
     </div>
 
-    <div @click="emit('update:timeVisible', true)" class="calendartime-text">
-      {{ displayedTime }}
+    <div class="calendartime-buttons">
+      <span @click="handleConfirm" class="calendartime-buttons-item">
+        确定
+      </span>
+      <span @click="handleCurrentTime" class="calendartime-buttons-item">
+        当前
+      </span>
+      <span @click="handleCancel" class="calendartime-buttons-item">
+        取消
+      </span>
     </div>
   </div>
 </template>
 
 <style scoped lang="less">
 .calendartime {
+  height: 250px;
   text-align: center;
+  background-color: white;
+  position: relative;
+  top: -250px;
+  margin-bottom: -250px;
 
-  &-input {
-    background-color: white;
-    position: relative;
-    top: -248px;
-    margin-bottom: -254px; //254px是弹出框的高度
-
-    &-scroller {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    &-button {
-      color: v-bind('color');
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      border: 1px solid gray;
-      font-size: 1rem;
-      font-weight: bold;
-      line-height: 2;
-    }
+  &-scroller {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
-  &-text {
-    margin: 0.4rem 0;
-    padding: 0.2rem 0;
-    border: 1px solid rgba(128, 128, 128, 0.6);
-    border-radius: 4px;
+  &-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    column-gap: 1rem;
+    border: 1px solid gray;
+    font-size: 0.8rem;
+    line-height: 2;
+    &-item {
+      &:hover {
+        font-weight: bold;
+      }
+    }
   }
 }
 </style>

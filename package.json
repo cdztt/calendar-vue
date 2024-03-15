@@ -1,17 +1,20 @@
 {
-  "name": "calendar-vue",
-  "version": "1.0.0",
+  "name": "@cdztt/calendar-vue",
+  "version": "1.0.8",
   "type": "module",
   "files": [
-    "dist"
+    "dist/index.js",
+    "dist/index.umd.cjs",
+    "style.css"
   ],
-  "main": "./dist/calendar-vue.umd.cjs",
-  "module": "./dist/calendar-vue.js",
+  "main": "./dist/index.umd.cjs",
+  "module": "./dist/index.js",
   "exports": {
     ".": {
-      "import": "./dist/calendar-vue.js",
-      "require": "./dist/calendar-vue.umd.cjs"
-    }
+      "import": "./dist/index.js",
+      "require": "./dist/index.umd.cjs"
+    },
+    "./dist/style.css": "./dist/style.css"
   },
   "scripts": {
     "dev": "vite",
@@ -20,12 +23,11 @@
     "npm:pub": "npm publish --access public"
   },
   "dependencies": {
+    "@cdztt/calendar-vue": "^1.0.7",
     "vue": "^3.4.19"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "less": "^4.2.0",
-    "prettier": "^3.2.5",
     "vite": "^5.1.4"
   }
 }

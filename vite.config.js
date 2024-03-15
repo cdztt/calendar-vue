@@ -9,7 +9,7 @@ export default defineConfig({
     lib: {
       entry: resolve(__dirname, 'src/index.js'),
       name: 'CalendarVue',
-      fileName: 'calendar-vue',
+      fileName: 'index',
     },
     rollupOptions: {
       external: ['vue'],
