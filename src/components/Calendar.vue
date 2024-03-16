@@ -176,6 +176,46 @@ const showCalendar = async () => {
       );
       offset.left = Math.max(-calendarRef.value.offsetWidth, -contentLeft);
       break;
+    case 'topright':
+      offset.top = Math.max(-calendarRef.value.offsetHeight, -contentTop);
+      offset.left =
+        contentRef.value.offsetWidth -
+        Math.max(
+          contentRightWithoutScrollBar.value +
+            calendarRef.value.offsetWidth -
+            viewWidth,
+          0
+        );
+      break;
+    case 'bottomright':
+      offset.top =
+        contentRef.value.offsetHeight -
+        Math.max(
+          contentBottom + calendarRef.value.offsetHeight - viewHeight,
+          0
+        );
+      offset.left =
+        contentRef.value.offsetWidth -
+        Math.max(
+          contentRightWithoutScrollBar.value +
+            calendarRef.value.offsetWidth -
+            viewWidth,
+          0
+        );
+      break;
+    case 'bottomleft':
+      offset.top =
+        contentRef.value.offsetHeight -
+        Math.max(
+          contentBottom + calendarRef.value.offsetHeight - viewHeight,
+          0
+        );
+      offset.left = Math.max(-calendarRef.value.offsetWidth, -contentLeft);
+      break;
+    case 'topleft':
+      offset.top = Math.max(-calendarRef.value.offsetHeight, -contentTop);
+      offset.left = Math.max(-calendarRef.value.offsetWidth, -contentLeft);
+      break;
   }
 };
 
