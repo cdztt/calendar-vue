@@ -288,6 +288,7 @@ const showTimeScroller = () => {
 .calendar {
   position: relative;
   cursor: default;
+  line-height: 1.5;
 
   &-main {
     font-size: 1rem;
